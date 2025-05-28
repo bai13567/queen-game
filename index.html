@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Queen Game</title>
+  <title>Queen Puzzle</title>
   <style>
     body {
       font-family: sans-serif;
@@ -37,6 +37,11 @@
       font-size: 1.2em;
       margin-top: 10px;
     }
+    button {
+      margin-top: 12px;
+      font-size: 1em;
+      padding: 8px 16px;
+    }
   </style>
 </head>
 <body>
@@ -44,47 +49,17 @@
   <p>点击格子切换状态：❌ → 👑 → 空</p>
   <div id="board"></div>
   <p id="status"></p>
+  <button onclick="init()">再来一次</button>
 
   <script>
     const boardSize = 6;
     const board = document.getElementById('board');
     const status = document.getElementById('status');
-
-    const regions = [
-      [1,1,2,2,3,3],
-      [1,1,2,2,3,3],
-      [4,4,5,5,6,6],
-      [4,4,5,5,6,6],
-      [7,7,8,8,9,9],
-      [7,7,8,8,9,9],
-    ];
-
     const cells = [];
-
-    function createBoard() {
-      board.innerHTML = '';
-      for (let row = 0; row < boardSize; row++) {
-        cells[row] = [];
-        for (let col = 0; col < boardSize; col++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.dataset.row = row;
-          cell.dataset.col = col;
-          cell.dataset.state = 'empty';
-          const region = regions[row][col];
-          cell.style.backgroundColor = getRegionColor(region);
-          cell.addEventListener('click', () => {
-            toggleCell(cell);
-            checkWin();
-          });
-          board.appendChild(cell);
-          cells[row][col] = cell;
-        }
-      }
-    }
+    const colors = ['#fdd', '#dfd', '#ddf', '#ffd', '#dff', '#fdf', '#ccc', '#eef', '#fde'];
+    let regions = [];
 
     function getRegionColor(region) {
-      const colors = ['#fdd', '#dfd', '#ddf', '#ffd', '#dff', '#fdf', '#ccc', '#eef', '#fde'];
       return colors[(region - 1) % colors.length];
     }
 
@@ -104,6 +79,7 @@
       }
       cell.dataset.state = newState;
       cell.textContent = newText;
+      checkWin();
     }
 
     function checkWin() {
@@ -137,12 +113,81 @@
         status.textContent = '❌ 有冲突';
         status.style.color = 'red';
       } else {
-        status.textContent = '✅ 正确配置！';
+        status.textContent = '✅ 正确配置！点击“再来一次”可重新生成新局。';
         status.style.color = 'green';
       }
     }
 
-    createBoard();
+    function generateRandomRegions() {
+      const regionGrid = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
+      const cells = [];
+      for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+          cells.push([r, c]);
+        }
+      }
+      shuffle(cells);
+      let regionId = 1;
+      let count = 0;
+      for (const [r, c] of cells) {
+        if (regionGrid[r][c] !== 0) continue;
+        fillRegion(regionGrid, r, c, regionId, 4);
+        regionId++;
+        if (regionId > 9) break;
+      }
+      return regionGrid;
+    }
+
+    function fillRegion(grid, r, c, id, size) {
+      const stack = [[r, c]];
+      const directions = [[1,0],[0,1],[-1,0],[0,-1]];
+      let filled = 0;
+      while (stack.length && filled < size) {
+        const [x, y] = stack.pop();
+        if (
+          x >= 0 && x < boardSize &&
+          y >= 0 && y < boardSize &&
+          grid[x][y] === 0
+        ) {
+          grid[x][y] = id;
+          filled++;
+          shuffle(directions);
+          for (const [dx, dy] of directions) {
+            stack.push([x + dx, y + dy]);
+          }
+        }
+      }
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function init() {
+      board.innerHTML = '';
+      regions = generateRandomRegions();
+      for (let row = 0; row < boardSize; row++) {
+        cells[row] = [];
+        for (let col = 0; col < boardSize; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          cell.dataset.state = 'empty';
+          const region = regions[row][col];
+          cell.style.backgroundColor = getRegionColor(region);
+          cell.addEventListener('click', () => toggleCell(cell));
+          board.appendChild(cell);
+          cells[row][col] = cell;
+        }
+      }
+      status.textContent = '';
+    }
+
+    init();
   </script>
 </body>
 </html>
