@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Queen Game</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    #board { display: grid; grid-template-columns: repeat(6, 50px); gap: 2px; justify-content: center; margin-top: 20px; }
+    .cell {
+      width: 50px; height: 50px; font-size: 24px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none;
+      border: 1px solid #aaa;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .cell[data-state="queen"] { background-color: gold; transform: scale(1.05); }
+    .cell[data-state="x"] { background-color: #ccc; transform: scale(0.95); }
+    #controls { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Queen Puzzle</h2>
+  <p>点击格子切换状态：空 → 👑 → ❌ → 空</p>
+  <div id="board"></div>
+  <div id="controls">
+    <button onclick="checkWin()">检查胜利条件</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const boardSize = 6;
+    const board = document.getElementById('board');
+    const status = document.getElementById('status');
+
+    const regions = [
+      [1,1,2,2,3,3],
+      [1,1,2,2,3,3],
+      [4,4,5,5,6,6],
+      [4,4,5,5,6,6],
+      [7,7,8,8,9,9],
+      [7,7,8,8,9,9],
+    ];
+
+    const cells = [];
+
+    function createBoard() {
+      board.innerHTML = '';
+      for (let row = 0; row < boardSize; row++) {
+        cells[row] = [];
+        for (let col = 0; col < boardSize; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          cell.dataset.state = 'empty';
+          cell.textContent = '';
+          const region = regions[row][col];
+          cell.style.backgroundColor = getRegionColor(region);
+          cell.addEventListener('click', () => toggleCell(cell));
+          board.appendChild(cell);
+          cells[row][col] = cell;
+        }
+      }
+    }
+
+    function getRegionColor(region) {
+      const colors = ['#fdd', '#dfd', '#ddf', '#ffd', '#dff', '#fdf', '#ccc', '#eef', '#fde'];
+      return colors[(region - 1) % colors.length];
+    }
+
+    function toggleCell(cell) {
+      let state = cell.dataset.state;
+      let newState, newText;
+      if (state === 'empty') {
+        newState = 'queen';
+        newText = '👑';
+      } else if (state === 'queen') {
+        newState = 'x';
+        newText = '❌';
+      } else {
+        newState = 'empty';
+        newText = '';
+      }
+      cell.dataset.state = newState;
+      cell.textContent = newText;
+    }
+
+    function checkWin() {
+      const regionQueens = {};
+      const rows = Array(boardSize).fill(0);
+      const cols = Array(boardSize).fill(0);
+      const queens = [];
+
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+          const cell = cells[row][col];
+          const region = regions[row][col];
+          if (cell.dataset.state === 'queen') {
+            queens.push([row, col]);
+            rows[row]++;
+            cols[col]++;
+            if (!regionQueens[region]) regionQueens[region] = 0;
+            regionQueens[region]++;
+          }
+        }
+      }
+
+      const hasRowConflict = rows.some(count => count > 1);
+      const hasColConflict = cols.some(count => count > 1);
+      const hasRegionConflict = Object.values(regionQueens).some(count => count > 1);
+      const hasDiagonalConflict = queens.some(([r1, c1], i) =>
+        queens.slice(i+1).some(([r2, c2]) => Math.abs(r1 - r2) === Math.abs(c1 - c2))
+      );
+
+      if (hasRowConflict || hasColConflict || hasRegionConflict || hasDiagonalConflict) {
+        status.textContent = '❌ 有冲突，检查皇后放置！';
+      } else {
+        status.textContent = '✅ 正确！通关成功 🎉';
+      }
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
