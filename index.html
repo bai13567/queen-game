@@ -21,16 +21,17 @@
       margin: 10px auto;
     }
     .cell {
-      font-size: 4vw;
-      aspect-ratio: 1/1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #aaa;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.2s;
-    }
+  width: calc(100vw / 8);         /* 每格宽度 = 屏幕宽度除以 8，保证适配 */
+  height: calc(100vw / 8);        /* 正方形格子 */
+  font-size: 6vw;                 /* 字体更大一点 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #aaa;
+  user-select: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
     .cell[data-state="queen"] { background: gold; }
     .cell[data-state="x"] { background: #ccc; }
     .overlay {
