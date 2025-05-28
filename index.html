@@ -1,170 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Queen Puzzle</title>
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
       margin: 0;
       padding: 10px;
+      text-align: center;
+    }
+    #controls {
+      margin-bottom: 10px;
     }
     #board {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 3px;
+      gap: 2px;
       max-width: 95vw;
-      margin: 20px auto;
+      margin: 10px auto;
     }
     .cell {
-      background-color: #fff;
-      font-size: 5vw;
-      aspect-ratio: 1 / 1;
+      font-size: 4vw;
+      aspect-ratio: 1/1;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid #aaa;
       cursor: pointer;
       user-select: none;
-      border: 1px solid #aaa;
-      transition: background-color 0.2s, transform 0.1s;
+      transition: background 0.2s;
     }
-    .cell[data-state="queen"] { background-color: gold; transform: scale(1.05); }
-    .cell[data-state="x"] { background-color: #ccc; transform: scale(0.95); }
+    .cell[data-state="queen"] { background: gold; }
+    .cell[data-state="x"] { background: #ccc; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: grid;
+      place-items: center;
+      font-size: 2em;
+      opacity: 0.3;
+      z-index: 5;
+    }
     #status {
       font-size: 1.2em;
       margin-top: 10px;
     }
-    button {
-      margin: 8px;
-      padding: 8px 14px;
+    button, select {
+      margin: 5px;
+      padding: 6px 12px;
       font-size: 1em;
+    }
+    #overlay-board {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      display: grid;
+      gap: 2px;
+      opacity: 0.3;
+      z-index: 1;
+    }
+    #game-container {
+      position: relative;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
+
   <h2>Queen Puzzle</h2>
-  <p>点击格子切换状态：❌ → 👑 → 空</p>
-  <div id="board"></div>
-  <p id="status"></p>
-  <button onclick="checkWin(true)">显示正确解</button>
-  <button onclick="location.reload()">再来一次</button>
+
+  <div id="controls">
+    棋盘大小：
+    <select id="sizeSelect" onchange="loadBoard()">
+      <option value="6">6 x 6</option>
+      <option value="7">7 x 7</option>
+      <option value="8">8 x 8</option>
+    </select>
+    <button onclick="showSolution()">显示参考解</button>
+    <button onclick="loadBoard()">再来一次</button>
+  </div>
+
+  <div id="game-container">
+    <div id="board"></div>
+    <div id="overlay-board"></div>
+  </div>
+
+  <div id="status"></div>
 
   <script>
-    const boardSize = 6;
-    const regionMap = [
-      [1,1,1,2,2,6],
-      [1,5,5,2,6,6],
-      [5,5,2,2,4,4],
-      [3,9,9,4,4,4],
-      [3,9,7,7,8,8],
-      [3,3,7,7,8,8]
-    ];
-    const solutionGrid = [
-      ["queen","x","x","x","x","queen"],
-      ["x","x","x","x","queen","x"],
-      ["x","queen","x","x","x","x"],
-      ["x","queen","x","x","x","x"],
-      ["x","x","queen","x","x","x"],
-      ["x","x","x","queen","x","x"]
-    ];
+    const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','#ccf'];
+    let data, currentSize = 6;
+    let cells = [], overlays = [], regionMap = [], solutionGrid = [];
 
-    const board = document.getElementById('board');
-    const status = document.getElementById('status');
-    const colors = ['#fdd', '#dfd', '#ddf', '#ffd', '#dff', '#fdf', '#ccc', '#eef', '#fde'];
-    const cells = [];
+    async function loadJSON() {
+      const res = await fetch("queen_multi_size_levels.json");
+      data = await res.json();
+      loadBoard();
+    }
 
-    function getRegionColor(region) {
-      return colors[(region - 1) % colors.length];
+    function loadBoard() {
+      currentSize = parseInt(document.getElementById("sizeSelect").value);
+      const board = document.getElementById("board");
+      const overlayBoard = document.getElementById("overlay-board");
+      board.innerHTML = '';
+      overlayBoard.innerHTML = '';
+      board.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+      overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+      cells = []; overlays = [];
+
+      const boardData = data[currentSize];
+      regionMap = boardData.region_map;
+      solutionGrid = boardData.solution_grid;
+
+      for (let r = 0; r < currentSize; r++) {
+        cells[r] = []; overlays[r] = [];
+        for (let c = 0; c < currentSize; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.state = "empty";
+          cell.style.background = colors[(regionMap[r][c]-1)%colors.length];
+          cell.addEventListener("click", () => toggleCell(cell));
+          board.appendChild(cell);
+          cells[r][c] = cell;
+
+          const ov = document.createElement("div");
+          ov.className = "cell";
+          ov.textContent = solutionGrid[r][c] === "queen" ? "👑" : "❌";
+          overlayBoard.appendChild(ov);
+          overlays[r][c] = ov;
+        }
+      }
+      document.getElementById("status").textContent = '';
+      document.getElementById("overlay-board").style.display = "none";
     }
 
     function toggleCell(cell) {
       const state = cell.dataset.state;
-      let newState = '', newText = '';
-      if (state === 'empty') {
-        newState = 'x'; newText = '❌';
-      } else if (state === 'x') {
-        newState = 'queen'; newText = '👑';
+      if (state === "empty") {
+        cell.dataset.state = "x";
+        cell.textContent = "❌";
+      } else if (state === "x") {
+        cell.dataset.state = "queen";
+        cell.textContent = "👑";
       } else {
-        newState = 'empty'; newText = '';
+        cell.dataset.state = "empty";
+        cell.textContent = "";
       }
-      cell.dataset.state = newState;
-      cell.textContent = newText;
       checkWin();
     }
 
-    function checkWin(forceShow=false) {
-      const rows = Array(boardSize).fill(0);
-      const cols = Array(boardSize).fill(0);
-      const regionQueens = {};
-      const queens = [];
-      let filledCount = 0;
+    function showSolution() {
+      document.getElementById("overlay-board").style.display = "grid";
+    }
 
-      for (let r = 0; r < boardSize; r++) {
-        for (let c = 0; c < boardSize; c++) {
+    function checkWin() {
+      let filled = 0, queens = [];
+      const rows = Array(currentSize).fill(0);
+      const cols = Array(currentSize).fill(0);
+      const regionQueens = {};
+
+      for (let r = 0; r < currentSize; r++) {
+        for (let c = 0; c < currentSize; c++) {
           const cell = cells[r][c];
           const state = cell.dataset.state;
-          if (state === 'queen') {
+          if (state !== "empty") filled++;
+          if (state === "queen") {
             rows[r]++;
             cols[c]++;
-            const region = regionMap[r][c];
-            regionQueens[region] = (regionQueens[region] || 0) + 1;
-            queens.push([r, c]);
-            filledCount++;
-          } else if (state === 'x') {
-            filledCount++;
+            const reg = regionMap[r][c];
+            regionQueens[reg] = (regionQueens[reg] || 0) + 1;
+            queens.push([r,c]);
           }
         }
       }
 
-      const allFilled = filledCount === boardSize * boardSize;
-      const hasRowConflict = rows.some(x => x > 1);
-      const hasColConflict = cols.some(x => x > 1);
-      const hasRegionConflict = Object.values(regionQueens).some(x => x > 1);
-      const hasDiagonalConflict = queens.some(([r1, c1], i) =>
-        queens.slice(i+1).some(([r2, c2]) => Math.abs(r1 - r2) === Math.abs(c1 - c2))
-      );
+      let conflict = false;
+      if (filled < currentSize * currentSize) return;
 
-      if (forceShow) {
-        for (let r = 0; r < boardSize; r++) {
-          for (let c = 0; c < boardSize; c++) {
-            const cell = cells[r][c];
-            const state = solutionGrid[r][c];
-            cell.dataset.state = state;
-            cell.textContent = state === 'queen' ? '👑' : '❌';
-          }
-        }
-        status.textContent = '✅ 正确答案已显示';
-        status.style.color = 'blue';
-        return;
-      }
-
-      if (allFilled && !hasRowConflict && !hasColConflict && !hasRegionConflict && !hasDiagonalConflict) {
-        status.textContent = '🎉 恭喜！成功完成！';
-        status.style.color = 'green';
-      } else {
-        status.textContent = '';
-      }
-    }
-
-    function init() {
-      for (let r = 0; r < boardSize; r++) {
-        cells[r] = [];
-        for (let c = 0; c < boardSize; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.dataset.state = 'empty';
-          const region = regionMap[r][c];
-          cell.style.backgroundColor = getRegionColor(region);
-          cell.addEventListener('click', () => toggleCell(cell));
-          board.appendChild(cell);
-          cells[r][c] = cell;
+      if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
+      if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
+      for (let i = 0; i < queens.length; i++) {
+        for (let j = i+1; j < queens.length; j++) {
+          const [r1,c1] = queens[i], [r2,c2] = queens[j];
+          if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) conflict = true;
+          if (Math.abs(r1 - r2) === Math.abs(c1 - c2)) conflict = true;
         }
       }
+
+      const status = document.getElementById("status");
+      status.textContent = conflict ? "❌ 有冲突或未完成" : "🎉 恭喜完成！";
+      status.style.color = conflict ? "red" : "green";
     }
 
-    init();
+    loadJSON();
   </script>
 </body>
 </html>
