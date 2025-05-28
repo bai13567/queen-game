@@ -1,32 +1,49 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Queen Game</title>
   <style>
-    body { font-family: sans-serif; text-align: center; }
-    #board { display: grid; grid-template-columns: repeat(6, 50px); gap: 2px; justify-content: center; margin-top: 20px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 10px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 3px;
+      max-width: 95vw;
+      margin: 20px auto;
+    }
     .cell {
-      width: 50px; height: 50px; font-size: 24px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; user-select: none;
+      background-color: #fff;
+      font-size: 5vw;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
       border: 1px solid #aaa;
       transition: background-color 0.2s, transform 0.1s;
     }
     .cell[data-state="queen"] { background-color: gold; transform: scale(1.05); }
     .cell[data-state="x"] { background-color: #ccc; transform: scale(0.95); }
-    #controls { margin-top: 10px; }
+    #status {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h2>Queen Puzzle</h2>
-  <p>点击格子切换状态：空 → 👑 → ❌ → 空</p>
+  <p>点击格子切换状态：❌ → 👑 → 空</p>
   <div id="board"></div>
-  <div id="controls">
-    <button onclick="checkWin()">检查胜利条件</button>
-    <p id="status"></p>
-  </div>
+  <p id="status"></p>
 
   <script>
     const boardSize = 6;
@@ -54,10 +71,12 @@
           cell.dataset.row = row;
           cell.dataset.col = col;
           cell.dataset.state = 'empty';
-          cell.textContent = '';
           const region = regions[row][col];
           cell.style.backgroundColor = getRegionColor(region);
-          cell.addEventListener('click', () => toggleCell(cell));
+          cell.addEventListener('click', () => {
+            toggleCell(cell);
+            checkWin();
+          });
           board.appendChild(cell);
           cells[row][col] = cell;
         }
@@ -70,14 +89,15 @@
     }
 
     function toggleCell(cell) {
-      let state = cell.dataset.state;
-      let newState, newText;
+      const state = cell.dataset.state;
+      let newState = '';
+      let newText = '';
       if (state === 'empty') {
-        newState = 'queen';
-        newText = '👑';
-      } else if (state === 'queen') {
         newState = 'x';
         newText = '❌';
+      } else if (state === 'x') {
+        newState = 'queen';
+        newText = '👑';
       } else {
         newState = 'empty';
         newText = '';
@@ -114,9 +134,11 @@
       );
 
       if (hasRowConflict || hasColConflict || hasRegionConflict || hasDiagonalConflict) {
-        status.textContent = '❌ 有冲突，检查皇后放置！';
+        status.textContent = '❌ 有冲突';
+        status.style.color = 'red';
       } else {
-        status.textContent = '✅ 正确！通关成功 🎉';
+        status.textContent = '✅ 正确配置！';
+        status.style.color = 'green';
       }
     }
 
