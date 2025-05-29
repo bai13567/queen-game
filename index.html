@@ -233,29 +233,26 @@ function generateBoard(size) {
 
   function isValid(r, c, queens) {
     for (const [qr, qc] of queens) {
-      if (qr === r || qc === c || Math.abs(qr - r) === Math.abs(qc - c)) return false;
+      if (qr === r || qc === c) return false;
+      if (Math.abs(qr - r) === Math.abs(qc - c)) return false;
       if (Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1) return false;
     }
     return true;
   }
 
-  function placeQueens() {
-    const result = [];
-    const positions = [];
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        positions.push([r, c]);
-      }
-    }
+  function placeQueens(row = 0, queens = []) {
+    if (queens.length === queenCount) return queens;
+    if (row >= size) return null;
 
-    positions.sort(() => Math.random() - 0.5);
-    for (const [r, c] of positions) {
-      if (isValid(r, c, result)) {
-        result.push([r, c]);
-        if (result.length === queenCount) break;
+    for (let col = 0; col < size; col++) {
+      if (isValid(row, col, queens)) {
+        queens.push([row, col]);
+        const result = placeQueens(row + 1, queens);
+        if (result) return result;
+        queens.pop();
       }
     }
-    return result.length === queenCount ? result : null;
+    return null;
   }
 
   function growRegion(grid, r, c, id) {
@@ -264,18 +261,19 @@ function generateBoard(size) {
     const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
     let filled = 0;
 
-    while (q.length && filled < 20) {
+    while (q.length && filled < size * size) {
       const [x, y] = q.shift();
       if (x < 0 || x >= size || y < 0 || y >= size) continue;
       if (visited[x][y] || grid[x][y] !== 0) continue;
       grid[x][y] = id;
       visited[x][y] = true;
       filled++;
-      if (filled >= 3 && Math.random() < 0.4) break;
+      if (filled >= 3 && Math.random() < 0.3) break;
       for (const [dx, dy] of directions) {
         q.push([x + dx, y + dy]);
       }
     }
+
     return filled >= 3;
   }
 
@@ -289,14 +287,16 @@ function generateBoard(size) {
     return grid;
   }
 
-  for (let i = 0; i < 100; i++) {
+  for (let attempt = 0; attempt < 100; attempt++) {
     const queens = placeQueens();
     if (!queens) continue;
     const regionMap = generateRegions(queens);
     if (!regionMap) continue;
-    const solution = Array.from({ length: size }, () => Array(size).fill("x"));
-    for (const [r, c] of queens) solution[r][c] = "queen";
-    return { region_map: regionMap, solution_grid: solution };
+    const solutionGrid = Array.from({ length: size }, () => Array(size).fill("x"));
+    for (const [r, c] of queens) {
+      solutionGrid[r][c] = "queen";
+    }
+    return { region_map: regionMap, solution_grid: solutionGrid };
   }
 
   return null;
