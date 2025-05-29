@@ -100,14 +100,25 @@ function loadBoard() {
   const oldStyle = document.getElementById("dynamic-cell-style");
   if (oldStyle) oldStyle.remove();
 
-  const style = document.createElement("style");
-  style.id = "dynamic-cell-style";
   style.innerHTML = `
-    .cell {
-      width: ${cellSize}vw;
-      height: ${cellSize}vw;
-      font-size: ${cellSize * 0.6}vw;
-    }`;
+  .cell {
+    width: ${cellSize}vw;
+    height: ${cellSize}vw;
+    font-size: ${cellSize * 0.6}vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #aaa;
+    user-select: none;
+    cursor: pointer;
+    box-sizing: border-box; /* 加这行可确保对齐无误差 */
+  }
+  #overlay-board .cell {
+    background: none;
+    opacity: 0.4;
+    font-size: ${cellSize * 0.6}vw;
+  }
+`;
   document.head.appendChild(style);
 
   const board = document.getElementById("board");
