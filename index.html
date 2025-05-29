@@ -335,7 +335,7 @@ function generateBoard(size) {
   }
 
   // 主逻辑：尽可能多尝试几次（300次以保证8x8成功率）
-  for (let attempt = 0; attempt < 3000; attempt++) {
+  for (let attempt = 0; attempt < 300; attempt++) {
     const regionMap = generateRegions();
     if (!regionMap) continue;
 
