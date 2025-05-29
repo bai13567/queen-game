@@ -62,7 +62,6 @@
       line-height: 1;
       pointer-events: none;
       filter: drop-shadow(0 0 1px #ffb) drop-shadow(0 0 3px #d4af37);
-      /* 优化视觉 */
     }
     #overlay-board .cell {
       background: none !important;
@@ -243,7 +242,6 @@ const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','
 let currentSize = 6;
 let cells = [], overlays = [], regionMap = [], solutionGrid = [];
 let showingSolution = false;
-let presetLevels = null;
 
 // 动态计算cell大小并设置样式
 function updateCellStyle() {
@@ -267,23 +265,10 @@ function updateCellStyle() {
   document.head.appendChild(style);
 }
 
-// 加载json预设关卡
-async function loadPresetLevels() {
-  if (presetLevels) return;
-  try {
-    const resp = await fetch("queen_multi_size_levels_6_7.json");
-    presetLevels = await resp.json();
-  } catch(e) {
-    presetLevels = null;
-  }
-}
-
 async function loadBoard() {
   currentSize = parseInt(document.getElementById("sizeSelect").value);
   showingSolution = false;
   document.getElementById("solutionBtn").textContent = "显示参考解";
-
-  await loadPresetLevels();
   updateCellStyle();
 
   const board = document.getElementById("board");
@@ -296,17 +281,11 @@ async function loadBoard() {
   cells = [], overlays = [];
 
   let boardData = null;
-  if (presetLevels && presetLevels[String(currentSize)]) {
-    const lv = presetLevels[String(currentSize)];
-    regionMap = lv.region_map;
-    solutionGrid = lv.solution_grid;
-  } else {
-    let attempts = 0;
-    while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
-    if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
-    regionMap = boardData.region_map;
-    solutionGrid = boardData.solution_grid;
-  }
+  let attempts = 0;
+  while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
+  if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
+  regionMap = boardData.region_map;
+  solutionGrid = boardData.solution_grid;
 
   // 逐格淡入动画
   let delay = 0, delayStep = 18;
@@ -380,7 +359,6 @@ function showSolution() {
 }
 
 function showFireworks(x, y, container) {
-  // 在棋盘中央/胜利处生成烟花
   const colors = ['#fc3','#f36','#3cf','#9c3','#fa5','#fd4','#6fc','#c9f','#f8c'];
   for (let i = 0; i < 14; i++) {
     const fw = document.createElement('div');
@@ -421,11 +399,8 @@ function checkWin() {
   const queenCount = queens.length;
   let conflict = false;
 
-  // 1) 同行/同列冲突
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
-  // 2) 区域内冲突
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
-  // 3) 斜邻接冲突（只禁止 dr===1 && dc===1）
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
       const [r1, c1] = queens[i], [r2, c2] = queens[j];
@@ -446,10 +421,8 @@ function checkWin() {
   } else {
     status.textContent = "🎉 恭喜完成！";
     status.style.color = "green";
-    // 烟花动画
     const rect = document.getElementById("game-container").getBoundingClientRect();
     showFireworks(rect.width/2, rect.height/2, document.getElementById("game-container"));
-    // 成就
     updateAchievements(currentSize);
   }
 }
@@ -606,7 +579,6 @@ function showMainUI() {
   loadBoard();
 }
 window.addEventListener("DOMContentLoaded", () => {
-  // 首次访问判断
   if (localStorage.getItem('queenPuzzle_verified') === '1') {
     showMainUI();
   } else {
