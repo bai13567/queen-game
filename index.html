@@ -103,6 +103,27 @@
 
     function loadBoard() {
       currentSize = parseInt(document.getElementById("sizeSelect").value);
+        const cellSize = Math.floor(90 / currentSize);
+  const oldStyle = document.getElementById("dynamic-cell-style");
+  if (oldStyle) oldStyle.remove();
+
+  const style = document.createElement("style");
+  style.id = "dynamic-cell-style";
+  style.innerHTML = `
+    .cell {
+      width: ${cellSize}vw;
+      height: ${cellSize}vw;
+      font-size: ${cellSize * 0.6}vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #aaa;
+      user-select: none;
+      cursor: pointer;
+    }
+  `;
+  document.head.appendChild(style);
+      
       const board = document.getElementById("board");
       const overlayBoard = document.getElementById("overlay-board");
       board.innerHTML = '';
