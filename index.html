@@ -231,7 +231,7 @@ function generateBoard(size) {
   const maxRegionSize = Math.floor((size * size) / queenCount);
   const minRegionSize = 3;
 
-  // Fisher-Yates 洗牌（用于打乱区域顺序和格子顺序）
+  // 洗牌数组顺序
   function shuffleArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -239,12 +239,11 @@ function generateBoard(size) {
     }
   }
 
-  // Step 1: 生成颜色区域（每块连通，大小3格以上）
+  // Step 1: 生成颜色区域
   function generateRegions() {
     const grid = Array.from({ length: size }, () => Array(size).fill(0));
     const directions = [[1,0], [-1,0], [0,1], [0,-1]];
-    let regionId = 1;
-    let attempts = 0;
+    let regionId = 1, attempts = 0;
 
     while (regionId <= queenCount && attempts < 1000) {
       attempts++;
@@ -281,10 +280,18 @@ function generateBoard(size) {
     }
 
     const filled = grid.flat().filter(x => x !== 0).length;
-    return (regionId > queenCount && filled === size * size) ? grid : null;
+
+    // 附加判断：格子数是否刚好填满，且每个区域格数合理
+    const regionCounts = grid.flat().reduce((acc, val) => {
+      acc[val] = (acc[val] || 0) + 1;
+      return acc;
+    }, {});
+    const allGood = Object.values(regionCounts).every(cnt => cnt >= minRegionSize && cnt <= maxRegionSize);
+
+    return (regionId > queenCount && filled === size * size && allGood) ? grid : null;
   }
 
-  // Step 2: 在每个区域中放皇后，使用回溯
+  // Step 2: 区域回溯放皇后
   function placeQueens(regionMap) {
     const regionCells = {};
     for (let r = 0; r < size; r++) {
@@ -327,8 +334,8 @@ function generateBoard(size) {
     return backtrack(0) ? queens : null;
   }
 
-  // 主尝试逻辑
-  for (let attempt = 0; attempt < 100; attempt++) {
+  // 主逻辑：尽可能多尝试几次（300次以保证8x8成功率）
+  for (let attempt = 0; attempt < 300; attempt++) {
     const regionMap = generateRegions();
     if (!regionMap) continue;
 
