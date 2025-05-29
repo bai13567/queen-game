@@ -95,11 +95,9 @@
     let data, currentSize = 6;
     let cells = [], overlays = [], regionMap = [], solutionGrid = [];
 
-    async function loadJSON() {
-      const res = await fetch("queen_multi_size_levels_6_7.json");
-      data = await res.json();
-      loadBoard();
-    }
+    function loadJSON() {
+  loadBoard(); // 只调用随机生成逻辑
+}
 
     function loadBoard() {
       currentSize = parseInt(document.getElementById("sizeSelect").value);
@@ -287,7 +285,7 @@ function generateBoard(size) {
     return grid;
   }
 
-  for (let attempt = 0; attempt < 100; attempt++) {
+  for (let attempt = 0; attempt < 300; attempt++) {
     const queens = placeQueens();
     if (!queens) continue;
     const regionMap = generateRegions(queens);
