@@ -10,18 +10,33 @@
       margin: 0;
       padding: 10px;
       text-align: center;
+      background: #fafafd;
     }
     #controls {
       margin-bottom: 10px;
     }
-    #board {
+    #game-container {
+      position: relative;
+      display: inline-block;
+      width: 96vw;
+      max-width: 420px;
+      aspect-ratio: 1/1;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0001;
+      margin: 0 auto 12px auto;
+    }
+    #board, #overlay-board {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       display: grid;
       gap: 2px;
-      max-width: 95vw;
-      margin: 10px auto;
+      pointer-events: auto;
     }
     .cell {
-      font-size: 6vw;
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -29,45 +44,32 @@
       user-select: none;
       cursor: pointer;
       transition: background 0.2s;
+      background: #eee;
     }
     .cell[data-state="queen"] { background: gold; }
     .cell[data-state="x"] { background: #ccc; }
-    .overlay {
-      position: absolute;
-      inset: 0;
+    #overlay-board .cell {
+      background: none !important;
+      opacity: 0.4;
       pointer-events: none;
-      display: grid;
-      place-items: center;
-      font-size: 2em;
-      opacity: 0.3;
-      z-index: 5;
+      z-index: 10;
     }
     #status {
       font-size: 1.2em;
       margin-top: 10px;
+      min-height: 1.5em;
     }
     button, select {
       margin: 5px;
       padding: 6px 12px;
       font-size: 1em;
-    }
-    #overlay-board {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      display: grid;
-      gap: 2px;
-      opacity: 0.3;
-      z-index: 1;
-    }
-    #game-container {
-      position: relative;
-      display: inline-block;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: #f8f8fb;
     }
   </style>
 </head>
 <body>
-
 <h2>Queen Puzzle</h2>
 
 <div id="controls">
@@ -77,7 +79,7 @@
     <option value="7">7 x 7</option>
     <option value="8">8 x 8</option>
   </select>
-  <button onclick="showSolution()">显示参考解</button>
+  <button id="solutionBtn" onclick="showSolution()">显示参考解</button>
   <button onclick="loadBoard()">再来一次</button>
 </div>
 
@@ -93,50 +95,73 @@ const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','
 let currentSize = 6;
 let cells = [], overlays = [], regionMap = [], solutionGrid = [];
 let showingSolution = false;
+let presetLevels = null;
 
-function loadBoard() {
-  currentSize = parseInt(document.getElementById("sizeSelect").value);
-  const cellSize = Math.floor(90 / currentSize);
-  const oldStyle = document.getElementById("dynamic-cell-style");
+// 动态计算cell大小并设置样式
+function updateCellStyle() {
+  const container = document.getElementById("game-container");
+  const containerSize = container.offsetWidth;
+  const cellSize = Math.floor((containerSize - (currentSize - 1) * 2) / currentSize);
+  let oldStyle = document.getElementById("dynamic-cell-style");
   if (oldStyle) oldStyle.remove();
-
-  const style = document.createElement("style"); // ← 这一行不见了！
+  const style = document.createElement("style");
   style.id = "dynamic-cell-style";
   style.innerHTML = `
-  .cell {
-    width: ${cellSize}vw;
-    height: ${cellSize}vw;
-    font-size: ${cellSize * 0.6}vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #aaa;
-    user-select: none;
-    cursor: pointer;
-    box-sizing: border-box; /* 加这行可确保对齐无误差 */
-  }
-  #overlay-board .cell {
-    background: none;
-    opacity: 0.4;
-    font-size: ${cellSize * 0.6}vw;
-  }
-`;
+    .cell {
+      width: ${cellSize}px;
+      height: ${cellSize}px;
+      font-size: ${Math.floor(cellSize * 0.6)}px;
+    }
+    #overlay-board .cell {
+      font-size: ${Math.floor(cellSize * 0.6)}px;
+    }
+  `;
   document.head.appendChild(style);
+}
+
+// 加载json预设关卡
+async function loadPresetLevels() {
+  if (presetLevels) return;
+  try {
+    // 文件名保持和你的json一致
+    const resp = await fetch("queen_multi_size_levels_6_7.json");
+    presetLevels = await resp.json();
+  } catch(e) {
+    // 如果加载失败就不再用json
+    presetLevels = null;
+  }
+}
+
+async function loadBoard() {
+  currentSize = parseInt(document.getElementById("sizeSelect").value);
+  showingSolution = false;
+  document.getElementById("solutionBtn").textContent = "显示参考解";
+
+  await loadPresetLevels();
+  updateCellStyle();
 
   const board = document.getElementById("board");
   const overlayBoard = document.getElementById("overlay-board");
   board.innerHTML = '';
   overlayBoard.innerHTML = '';
-  board.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-  overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+  board.style.gridTemplateColumns = overlayBoard.style.gridTemplateColumns =
+    `repeat(${currentSize}, 1fr)`;
+
   cells = [], overlays = [];
 
-  let boardData = null, attempts = 0;
-  while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
-  if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
-
-  regionMap = boardData.region_map;
-  solutionGrid = boardData.solution_grid;
+  let boardData = null;
+  // 优先用json关卡
+  if (presetLevels && presetLevels[String(currentSize)]) {
+    const lv = presetLevels[String(currentSize)];
+    regionMap = lv.region_map;
+    solutionGrid = lv.solution_grid;
+  } else {
+    let attempts = 0;
+    while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
+    if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
+    regionMap = boardData.region_map;
+    solutionGrid = boardData.solution_grid;
+  }
 
   for (let r = 0; r < currentSize; r++) {
     cells[r] = [], overlays[r] = [];
@@ -145,7 +170,8 @@ function loadBoard() {
       cell.className = "cell";
       cell.dataset.state = "empty";
       cell.style.background = colors[(regionMap[r][c] - 1) % colors.length];
-      cell.addEventListener("click", () => toggleCell(cell));
+      cell.textContent = "";
+      cell.onclick = () => { if (!showingSolution) toggleCell(cell); };
       board.appendChild(cell);
       cells[r][c] = cell;
 
@@ -178,34 +204,24 @@ function toggleCell(cell) {
 
 function showSolution() {
   const overlay = document.getElementById("overlay-board");
-  const button = document.querySelector("#controls button");
-
+  const button = document.getElementById("solutionBtn");
   if (!showingSolution) {
-    // 显示参考解
-    for (let r = 0; r < currentSize; r++) {
-      for (let c = 0; c < currentSize; c++) {
-        const cell = cells[r][c];
-        cell.dataset.state = "empty";
-        cell.textContent = "";
-      }
-    }
+    // 显示解答层
     overlay.style.display = "grid";
-    showingSolution = true;
     button.textContent = "关闭参考解";
-  } else {
-    // 关闭参考解
-    for (let r = 0; r < currentSize; r++) {
+    showingSolution = true;
+    // 可选：清空当前操作，防止混淆
+    for (let r = 0; r < currentSize; r++)
       for (let c = 0; c < currentSize; c++) {
-        const cell = cells[r][c];
-        cell.dataset.state = "empty";
-        cell.textContent = "";
+        cells[r][c].dataset.state = "empty";
+        cells[r][c].textContent = "";
       }
-    }
+  } else {
+    // 关闭解答层
     overlay.style.display = "none";
-    showingSolution = false;
     button.textContent = "显示参考解";
+    showingSolution = false;
   }
-
   document.getElementById("status").textContent = "";
 }
 
@@ -234,14 +250,12 @@ function checkWin() {
 
   const regionCount = regionSet.size;
   const queenCount = queens.length;
-
   let conflict = false;
 
-    // 1) 同行/同列冲突
+  // 1) 同行/同列冲突
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
   // 2) 区域内冲突
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
-  
   // 3) 斜邻接冲突（只禁止 dr===1 && dc===1）
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
@@ -250,11 +264,9 @@ function checkWin() {
       if (dr === 1 && dc === 1) conflict = true;
     }
   }
-
-  // 4) 皇后数量校验（≯区域总数，不少于区域总数见“未完成”逻辑）
+  // 4) 皇后数量校验
   if (queenCount > regionCount) conflict = true;
 
-  // 显示“未完成”或“完成”
   const incomplete = queenCount < regionCount;
   const status = document.getElementById("status");
   if (conflict) {
@@ -269,8 +281,9 @@ function checkWin() {
   }
 }
 
+// 如果json没有预设则自动生成
 function generateBoard(size) {
-  const queenCount = { 6: 6, 7: 7, 8: 8 }[size];
+  const queenCount = size;
   const maxRegionSize = Math.floor((size * size) / queenCount);
   const minRegionSize = 3;
 
@@ -370,11 +383,16 @@ function generateBoard(size) {
     for (const [r, c] of queens) solutionGrid[r][c] = "queen";
     return { region_map: regionMap, solution_grid: solutionGrid };
   }
-
   return null;
 }
 
-loadBoard();
+// 首次加载
+window.addEventListener("resize", () => {
+  updateCellStyle();
+});
+window.addEventListener("DOMContentLoaded", () => {
+  loadBoard();
+});
 </script>
 </body>
 </html>
