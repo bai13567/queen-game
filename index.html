@@ -192,32 +192,26 @@ solutionGrid = boardData.solution_grid;
   const rows = Array(currentSize).fill(0);
   const cols = Array(currentSize).fill(0);
   const regionQueens = {};
-  const regionSeen = {};
-  let totalRegions = 0;
+  const regionSet = new Set();
 
+  // 记录皇后、行列冲突、区域编号
   for (let r = 0; r < currentSize; r++) {
     for (let c = 0; c < currentSize; c++) {
-      const cell = cells[r][c];
-      const state = cell.dataset.state;
+      const state = cells[r][c].dataset.state;
+      const regionId = regionMap[r][c];
+      regionSet.add(regionId);
 
       if (state === "queen") {
+        queens.push([r, c]);
         rows[r]++;
         cols[c]++;
-        const reg = regionMap[r][c];
-        regionQueens[reg] = (regionQueens[reg] || 0) + 1;
-        queens.push([r, c]);
-      }
-
-      const regId = regionMap[r][c];
-      if (!regionSeen[regId]) {
-        regionSeen[regId] = true;
-        totalRegions++;
+        regionQueens[regionId] = (regionQueens[regionId] || 0) + 1;
       }
     }
   }
 
+  const regionCount = regionSet.size;
   const queenCount = queens.length;
-  const regionCount = totalRegions;
 
   let conflict = false;
 
@@ -228,8 +222,11 @@ solutionGrid = boardData.solution_grid;
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
       const [r1, c1] = queens[i], [r2, c2] = queens[j];
-      if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) conflict = true;
-      if (Math.abs(r1 - r2) === Math.abs(c1 - c2)) conflict = true;
+      const dr = Math.abs(r1 - r2);
+      const dc = Math.abs(c1 - c2);
+      if (dr === dc || (dr <= 1 && dc <= 1)) {
+        conflict = true;
+      }
     }
   }
 
