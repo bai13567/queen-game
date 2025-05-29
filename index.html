@@ -194,7 +194,6 @@ solutionGrid = boardData.solution_grid;
   const regionQueens = {};
   const regionSet = new Set();
 
-  // 遍历用户操作层（只读 cells）
   for (let r = 0; r < currentSize; r++) {
     for (let c = 0; c < currentSize; c++) {
       const cell = cells[r][c];
@@ -216,22 +215,27 @@ solutionGrid = boardData.solution_grid;
 
   let conflict = false;
 
-  // 皇后数量必须正好等于区域数量
+  // ✅ 皇后数量必须等于区域数量
   if (queenCount !== regionCount) conflict = true;
+
+  // ✅ 每行每列不能超过 1 个皇后
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
+
+  // ✅ 每个区域最多 1 皇后
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
 
-  // 检查斜线与相邻位置冲突
+  // ✅ 检查相邻 & 对角线冲突
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
-      const [r1, c1] = queens[i], [r2, c2] = queens[j];
+      const [r1, c1] = queens[i];
+      const [r2, c2] = queens[j];
       const dr = Math.abs(r1 - r2);
       const dc = Math.abs(c1 - c2);
       if (dr === dc || (dr <= 1 && dc <= 1)) conflict = true;
     }
   }
 
-  // 状态更新
+  // ✅ 最终状态判断
   const status = document.getElementById("status");
   if (conflict) {
     status.textContent = "❌ 有冲突或未完成";
