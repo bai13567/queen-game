@@ -132,7 +132,19 @@
       overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
       cells = []; overlays = [];
 
-      const boardData = generateBoard(currentSize);
+      let boardData = null;
+let attempts = 0;
+
+while (!boardData && attempts < 5) {
+  boardData = generateBoard(currentSize);
+  attempts++;
+}
+
+if (!boardData) {
+  alert("生成棋盘失败，请刷新页面重试");
+  return;
+}
+
 regionMap = boardData.region_map;
 solutionGrid = boardData.solution_grid;
 
