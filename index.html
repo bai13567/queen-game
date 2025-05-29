@@ -229,28 +229,31 @@ solutionGrid = boardData.solution_grid;
 function generateBoard(size) {
   const queenCount = { 6: 6, 7: 7, 8: 9 }[size];
 
-  function isValid(r, c, queens) {
-    for (const [qr, qc] of queens) {
-      if (qr === r || qc === c) return false;
-      if (Math.abs(qr - r) === Math.abs(qc - c)) return false;
-      if (Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1) return false;
+  function placeQueens(size, count) {
+    const result = [];
+
+    function isValid(r, c) {
+      return result.every(([qr, qc]) =>
+        qr !== r && qc !== c &&
+        Math.abs(qr - r) !== Math.abs(qc - c) &&
+        !(Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1)
+      );
     }
-    return true;
-  }
 
-  function placeQueens(row = 0, queens = []) {
-    if (queens.length === queenCount) return queens;
-    if (row >= size) return null;
+    function backtrack(pos = 0) {
+      if (result.length === count) return true;
+      if (pos >= size * size) return false;
 
-    for (let col = 0; col < size; col++) {
-      if (isValid(row, col, queens)) {
-        queens.push([row, col]);
-        const result = placeQueens(row + 1, queens);
-        if (result) return result;
-        queens.pop();
+      const r = Math.floor(pos / size), c = pos % size;
+      if (isValid(r, c)) {
+        result.push([r, c]);
+        if (backtrack(pos + 1)) return true;
+        result.pop();
       }
+      return backtrack(pos + 1);
     }
-    return null;
+
+    return backtrack() ? result : null;
   }
 
   function growRegion(grid, r, c, id) {
@@ -286,7 +289,7 @@ function generateBoard(size) {
   }
 
   for (let attempt = 0; attempt < 300; attempt++) {
-    const queens = placeQueens();
+    const queens = placeQueens(size, queenCount);
     if (!queens) continue;
     const regionMap = generateRegions(queens);
     if (!regionMap) continue;
