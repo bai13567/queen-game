@@ -21,17 +21,15 @@
       margin: 10px auto;
     }
     .cell {
-  width: calc(100vw / 8);         /* 每格宽度 = 屏幕宽度除以 8，保证适配 */
-  height: calc(100vw / 8);        /* 正方形格子 */
-  font-size: 6vw;                 /* 字体更大一点 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #aaa;
-  user-select: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+      font-size: 6vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #aaa;
+      user-select: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
     .cell[data-state="queen"] { background: gold; }
     .cell[data-state="x"] { background: #ccc; }
     .overlay {
@@ -70,38 +68,34 @@
 </head>
 <body>
 
-  <h2>Queen Puzzle</h2>
+<h2>Queen Puzzle</h2>
 
-  <div id="controls">
-    棋盘大小：
-    <select id="sizeSelect" onchange="loadBoard()">
-      <option value="6">6 x 6</option>
-      <option value="7">7 x 7</option>
-      <option value="8">8 x 8</option>
-    </select>
-    <button onclick="showSolution()">显示参考解</button>
-    <button onclick="loadBoard()">再来一次</button>
-  </div>
+<div id="controls">
+  棋盘大小：
+  <select id="sizeSelect" onchange="loadBoard()">
+    <option value="6">6 x 6</option>
+    <option value="7">7 x 7</option>
+    <option value="8">8 x 8</option>
+  </select>
+  <button onclick="showSolution()">显示参考解</button>
+  <button onclick="loadBoard()">再来一次</button>
+</div>
 
-  <div id="game-container">
-    <div id="board"></div>
-    <div id="overlay-board"></div>
-  </div>
+<div id="game-container">
+  <div id="board"></div>
+  <div id="overlay-board"></div>
+</div>
 
-  <div id="status"></div>
+<div id="status"></div>
 
-  <script>
-    const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','#ccf'];
-    let data, currentSize = 6;
-    let cells = [], overlays = [], regionMap = [], solutionGrid = [];
+<script>
+const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','#ccf'];
+let currentSize = 6;
+let cells = [], overlays = [], regionMap = [], solutionGrid = [];
 
-    function loadJSON() {
-  loadBoard(); // 只调用随机生成逻辑
-}
-
-    function loadBoard() {
-      currentSize = parseInt(document.getElementById("sizeSelect").value);
-        const cellSize = Math.floor(90 / currentSize);
+function loadBoard() {
+  currentSize = parseInt(document.getElementById("sizeSelect").value);
+  const cellSize = Math.floor(90 / currentSize);
   const oldStyle = document.getElementById("dynamic-cell-style");
   if (oldStyle) oldStyle.remove();
 
@@ -112,82 +106,67 @@
       width: ${cellSize}vw;
       height: ${cellSize}vw;
       font-size: ${cellSize * 0.6}vw;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #aaa;
-      user-select: none;
-      cursor: pointer;
-    }
-  `;
+    }`;
   document.head.appendChild(style);
-      
-      const board = document.getElementById("board");
-      const overlayBoard = document.getElementById("overlay-board");
-      board.innerHTML = '';
-      overlayBoard.innerHTML = '';
-      board.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-      overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-      cells = []; overlays = [];
 
-      let boardData = null;
-let attempts = 0;
+  const board = document.getElementById("board");
+  const overlayBoard = document.getElementById("overlay-board");
+  board.innerHTML = '';
+  overlayBoard.innerHTML = '';
+  board.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+  overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+  cells = [], overlays = [];
 
-while (!boardData && attempts < 20) {
-  boardData = generateBoard(currentSize);
-  attempts++;
+  let boardData = null, attempts = 0;
+  while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
+  if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
+
+  regionMap = boardData.region_map;
+  solutionGrid = boardData.solution_grid;
+
+  for (let r = 0; r < currentSize; r++) {
+    cells[r] = [], overlays[r] = [];
+    for (let c = 0; c < currentSize; c++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.state = "empty";
+      cell.style.background = colors[(regionMap[r][c] - 1) % colors.length];
+      cell.addEventListener("click", () => toggleCell(cell));
+      board.appendChild(cell);
+      cells[r][c] = cell;
+
+      const ov = document.createElement("div");
+      ov.className = "cell";
+      ov.textContent = solutionGrid[r][c] === "queen" ? "👑" : "❌";
+      overlayBoard.appendChild(ov);
+      overlays[r][c] = ov;
+    }
+  }
+
+  document.getElementById("status").textContent = '';
+  document.getElementById("overlay-board").style.display = "none";
 }
 
-if (!boardData) {
-  alert("生成棋盘失败，请刷新页面重试");
-  return;
+function toggleCell(cell) {
+  const state = cell.dataset.state;
+  if (state === "empty") {
+    cell.dataset.state = "x";
+    cell.textContent = "❌";
+  } else if (state === "x") {
+    cell.dataset.state = "queen";
+    cell.textContent = "👑";
+  } else {
+    cell.dataset.state = "empty";
+    cell.textContent = "";
+  }
+  checkWin();
 }
 
-regionMap = boardData.region_map;
-solutionGrid = boardData.solution_grid;
+function showSolution() {
+  document.getElementById("overlay-board").style.display = "grid";
+}
 
-      for (let r = 0; r < currentSize; r++) {
-        cells[r] = []; overlays[r] = [];
-        for (let c = 0; c < currentSize; c++) {
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          cell.dataset.state = "empty";
-          cell.style.background = colors[(regionMap[r][c]-1)%colors.length];
-          cell.addEventListener("click", () => toggleCell(cell));
-          board.appendChild(cell);
-          cells[r][c] = cell;
-
-          const ov = document.createElement("div");
-          ov.className = "cell";
-          ov.textContent = solutionGrid[r][c] === "queen" ? "👑" : "❌";
-          overlayBoard.appendChild(ov);
-          overlays[r][c] = ov;
-        }
-      }
-      document.getElementById("status").textContent = '';
-      document.getElementById("overlay-board").style.display = "none";
-    }
-
-    function toggleCell(cell) {
-      const state = cell.dataset.state;
-      if (state === "empty") {
-        cell.dataset.state = "x";
-        cell.textContent = "❌";
-      } else if (state === "x") {
-        cell.dataset.state = "queen";
-        cell.textContent = "👑";
-      } else {
-        cell.dataset.state = "empty";
-        cell.textContent = "";
-      }
-      checkWin();
-    }
-
-    function showSolution() {
-      document.getElementById("overlay-board").style.display = "grid";
-    }
-
-    function checkWin() {
+function checkWin() {
   let queens = [];
   const rows = Array(currentSize).fill(0);
   const cols = Array(currentSize).fill(0);
@@ -196,11 +175,9 @@ solutionGrid = boardData.solution_grid;
 
   for (let r = 0; r < currentSize; r++) {
     for (let c = 0; c < currentSize; c++) {
-      const cell = cells[r][c];
-      const state = cell.dataset.state;
+      const state = cells[r][c].dataset.state;
       const regionId = regionMap[r][c];
       regionSet.add(regionId);
-
       if (state === "queen") {
         queens.push([r, c]);
         rows[r]++;
@@ -212,48 +189,30 @@ solutionGrid = boardData.solution_grid;
 
   const regionCount = regionSet.size;
   const queenCount = queens.length;
-
   let conflict = false;
 
-  // ✅ 皇后数量必须等于区域数量
   if (queenCount !== regionCount) conflict = true;
-
-  // ✅ 每行每列不能超过 1 个皇后
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
-
-  // ✅ 每个区域最多 1 皇后
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
 
-  // ✅ 检查相邻 & 对角线冲突
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
-      const [r1, c1] = queens[i];
-      const [r2, c2] = queens[j];
-      const dr = Math.abs(r1 - r2);
-      const dc = Math.abs(c1 - c2);
+      const [r1, c1] = queens[i], [r2, c2] = queens[j];
+      const dr = Math.abs(r1 - r2), dc = Math.abs(c1 - c2);
       if (dr === dc || (dr <= 1 && dc <= 1)) conflict = true;
     }
   }
 
-  // ✅ 最终状态判断
   const status = document.getElementById("status");
-  if (conflict) {
-    status.textContent = "❌ 有冲突或未完成";
-    status.style.color = "red";
-  } else {
-    status.textContent = "🎉 恭喜完成！";
-    status.style.color = "green";
-  }
+  status.textContent = conflict ? "❌ 有冲突或未完成" : "🎉 恭喜完成！";
+  status.style.color = conflict ? "red" : "green";
 }
-
-      
 
 function generateBoard(size) {
   const queenCount = { 6: 6, 7: 7, 8: 9 }[size];
   const maxRegionSize = Math.floor((size * size) / queenCount);
   const minRegionSize = 3;
 
-  // 洗牌数组顺序
   function shuffleArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -261,14 +220,12 @@ function generateBoard(size) {
     }
   }
 
-  // Step 1: 生成颜色区域
   function generateRegions() {
     const grid = Array.from({ length: size }, () => Array(size).fill(0));
     const directions = [[1,0], [-1,0], [0,1], [0,-1]];
-    let regionId = 1, attempts = 0;
+    let regionId = 1;
 
-    while (regionId <= queenCount && attempts < 1000) {
-      attempts++;
+    while (regionId <= queenCount) {
       const r = Math.floor(Math.random() * size);
       const c = Math.floor(Math.random() * size);
       if (grid[r][c] !== 0) continue;
@@ -276,7 +233,6 @@ function generateBoard(size) {
       const q = [[r, c]];
       const visited = Array.from({ length: size }, () => Array(size).fill(false));
       const region = [];
-
       visited[r][c] = true;
       region.push([r, c]);
 
@@ -284,36 +240,26 @@ function generateBoard(size) {
         const [x, y] = q.shift();
         for (const [dx, dy] of directions) {
           const nx = x + dx, ny = y + dy;
-          if (nx < 0 || nx >= size || ny < 0 || ny >= size) continue;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
           if (visited[nx][ny] || grid[nx][ny] !== 0) continue;
           visited[nx][ny] = true;
-          q.push([nx, ny]);
           region.push([nx, ny]);
+          q.push([nx, ny]);
           if (region.length >= minRegionSize && Math.random() < 0.3) break;
         }
       }
 
       if (region.length >= minRegionSize) {
-        for (const [x, y] of region) {
-          grid[x][y] = regionId;
-        }
+        for (const [x, y] of region) grid[x][y] = regionId;
         regionId++;
-      }
+      } else return null;
     }
 
-    const filled = grid.flat().filter(x => x !== 0).length;
-
-    // 附加判断：格子数是否刚好填满，且每个区域格数合理
-    const regionCounts = grid.flat().reduce((acc, val) => {
-      acc[val] = (acc[val] || 0) + 1;
-      return acc;
-    }, {});
-    const allGood = Object.values(regionCounts).every(cnt => cnt >= minRegionSize && cnt <= maxRegionSize);
-
-    return (regionId > queenCount && filled === size * size && allGood) ? grid : null;
+    const flat = grid.flat();
+    if (flat.includes(0)) return null;
+    return grid;
   }
 
-  // Step 2: 区域回溯放皇后
   function placeQueens(regionMap) {
     const regionCells = {};
     for (let r = 0; r < size; r++) {
@@ -337,7 +283,6 @@ function generateBoard(size) {
 
     function backtrack(idx) {
       if (idx === regionIds.length) return true;
-
       const regionId = regionIds[idx];
       const cells = [...regionCells[regionId]];
       shuffleArray(cells);
@@ -349,32 +294,26 @@ function generateBoard(size) {
           queens.pop();
         }
       }
-
       return false;
     }
 
     return backtrack(0) ? queens : null;
   }
 
-  // 主逻辑：尽可能多尝试几次（300次以保证8x8成功率）
-  for (let attempt = 0; attempt < 300; attempt++) {
+  for (let i = 0; i < 300; i++) {
     const regionMap = generateRegions();
     if (!regionMap) continue;
-
     const queens = placeQueens(regionMap);
     if (!queens) continue;
-
     const solutionGrid = Array.from({ length: size }, () => Array(size).fill("x"));
-    for (const [r, c] of queens) {
-      solutionGrid[r][c] = "queen";
-    }
+    for (const [r, c] of queens) solutionGrid[r][c] = "queen";
     return { region_map: regionMap, solution_grid: solutionGrid };
   }
 
   return null;
 }
 
-    loadJSON();
-  </script>
+loadBoard();
+</script>
 </body>
 </html>
