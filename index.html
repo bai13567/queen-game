@@ -298,66 +298,6 @@ function generateBoard(size) {
   return null;
 }
 
-  function isValid(r, c, queens) {
-    return queens.every(([qr, qc]) =>
-      qr !== r && qc !== c &&
-      Math.abs(qr - r) !== Math.abs(qc - c) &&
-      !(Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1)
-    );
-  }
-
-  function placeQueens() {
-    const res = [];
-    function backtrack(pos = 0) {
-      if (res.length === config.queens) return true;
-      if (pos >= size * size) return false;
-      const r = Math.floor(pos / size), c = pos % size;
-      if (isValid(r, c, res)) {
-        res.push([r, c]);
-        if (backtrack(pos + 1)) return true;
-        res.pop();
-      }
-      return backtrack(pos + 1);
-    }
-    return backtrack() ? res : null;
-  }
-
-  function generateRegions(queens) {
-    const grid = Array.from({ length: size }, () => Array(size).fill(0));
-    const directions = [[0,1],[1,0],[0,-1],[-1,0]];
-    let id = 1;
-
-    for (const [qr, qc] of queens) {
-      let filled = 0;
-      const q = [[qr, qc]];
-      while (q.length && filled < config.regionSize) {
-        const [r, c] = q.shift();
-        if (r < 0 || r >= size || c < 0 || c >= size) continue;
-        if (grid[r][c] !== 0) continue;
-        grid[r][c] = id;
-        filled++;
-        for (const [dr, dc] of directions) {
-          q.push([r + dr, c + dc]);
-        }
-      }
-      if (filled < config.regionSize) return null;
-      id++;
-    }
-    return grid;
-  }
-
-  for (let i = 0; i < 100; i++) {
-    const queens = placeQueens();
-    if (!queens) continue;
-    const regionMap = generateRegions(queens);
-    if (!regionMap) continue;
-    const solution = Array.from({ length: size }, () => Array(size).fill("x"));
-    for (const [r, c] of queens) solution[r][c] = "queen";
-    return { region_map: regionMap, solution_grid: solution };
-  }
-  return null;
-}
-
     loadJSON();
   </script>
 </body>
