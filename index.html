@@ -100,6 +100,8 @@ function loadBoard() {
   const oldStyle = document.getElementById("dynamic-cell-style");
   if (oldStyle) oldStyle.remove();
 
+  const style = document.createElement("style"); // ← 这一行不见了！
+  style.id = "dynamic-cell-style";
   style.innerHTML = `
   .cell {
     width: ${cellSize}vw;
