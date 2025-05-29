@@ -194,28 +194,25 @@ function checkWin() {
 
   let conflict = false;
 
-  // 皇后数量不能超过区域总数
-  if (queenCount > regionCount) conflict = true;
-
-  // 行列不冲突
+    // 1) 同行/同列冲突
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
-
-  // 区域内最多一个皇后
+  // 2) 区域内冲突
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
-
-  // 皇后之间不能对角线或八方向相邻
+  
+  // 3) 斜邻接冲突（只禁止 dr===1 && dc===1）
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
-      const [r1, c1] = queens[i];
-      const [r2, c2] = queens[j];
-      const dr = Math.abs(r1 - r2);
-      const dc = Math.abs(c1 - c2);
-      if (dr === dc || (dr <= 1 && dc <= 1)) conflict = true;
+      const [r1, c1] = queens[i], [r2, c2] = queens[j];
+      const dr = Math.abs(r1 - r2), dc = Math.abs(c1 - c2);
+      if (dr === 1 && dc === 1) conflict = true;
     }
   }
 
-  const incomplete = queenCount < regionCount;
+  // 4) 皇后数量校验（≯区域总数，不少于区域总数见“未完成”逻辑）
+  if (queenCount > regionCount) conflict = true;
 
+  // 显示“未完成”或“完成”
+  const incomplete = queenCount < regionCount;
   const status = document.getElementById("status");
   if (conflict) {
     status.textContent = "❌ 有冲突";
