@@ -227,7 +227,7 @@ function checkWin() {
 }
 
 function generateBoard(size) {
-  const queenCount = { 6: 6, 7: 7, 8: 9 }[size];
+  const queenCount = { 6: 6, 7: 7, 8: 8 }[size];
   const maxRegionSize = Math.floor((size * size) / queenCount);
   const minRegionSize = 3;
 
