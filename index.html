@@ -243,23 +243,7 @@ solutionGrid = boardData.solution_grid;
   }
 }
 
-      let conflict = false;
-      if (filled < currentSize * currentSize) return;
-
-      if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
-      if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
-      for (let i = 0; i < queens.length; i++) {
-        for (let j = i+1; j < queens.length; j++) {
-          const [r1,c1] = queens[i], [r2,c2] = queens[j];
-          if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) conflict = true;
-          if (Math.abs(r1 - r2) === Math.abs(c1 - c2)) conflict = true;
-        }
-      }
-
-      const status = document.getElementById("status");
-      status.textContent = conflict ? "❌ 有冲突或未完成" : "🎉 恭喜完成！";
-      status.style.color = conflict ? "red" : "green";
-    }
+      
 
 function generateBoard(size) {
   const queenCount = { 6: 6, 7: 7, 8: 9 }[size];
