@@ -229,15 +229,14 @@ solutionGrid = boardData.solution_grid;
     }
 
 function generateBoard(size) {
-  const config = { 6: 6, 7: 7, 8: 9 };
-  const queenCount = config[size];
+  const queenCount = { 6: 6, 7: 7, 8: 9 }[size];
 
   function isValid(r, c, queens) {
-    return queens.every(([qr, qc]) =>
-      qr !== r && qc !== c &&
-      Math.abs(qr - r) !== Math.abs(qc - c) &&
-      !(Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1)
-    );
+    for (const [qr, qc] of queens) {
+      if (qr === r || qc === c || Math.abs(qr - r) === Math.abs(qc - c)) return false;
+      if (Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1) return false;
+    }
+    return true;
   }
 
   function placeQueens() {
@@ -248,64 +247,56 @@ function generateBoard(size) {
         positions.push([r, c]);
       }
     }
-    positions.sort(() => Math.random() - 0.5); // 打乱顺序
 
-    function backtrack(index = 0) {
-      if (result.length === queenCount) return true;
-      if (index >= positions.length) return false;
-      const [r, c] = positions[index];
+    positions.sort(() => Math.random() - 0.5);
+    for (const [r, c] of positions) {
       if (isValid(r, c, result)) {
         result.push([r, c]);
-        if (backtrack(index + 1)) return true;
-        result.pop();
+        if (result.length === queenCount) break;
       }
-      return backtrack(index + 1);
     }
-
-    return backtrack() ? result : null;
+    return result.length === queenCount ? result : null;
   }
 
-  function growRegion(grid, r, c, id, minSize = 3) {
+  function growRegion(grid, r, c, id) {
     const q = [[r, c]];
     const visited = Array.from({ length: size }, () => Array(size).fill(false));
-    let filled = 0;
     const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    let filled = 0;
 
-    while (q.length && filled < size * size) {
+    while (q.length && filled < 20) {
       const [x, y] = q.shift();
       if (x < 0 || x >= size || y < 0 || y >= size) continue;
       if (visited[x][y] || grid[x][y] !== 0) continue;
       grid[x][y] = id;
       visited[x][y] = true;
       filled++;
-      if (filled >= minSize && Math.random() < 0.4) break;
+      if (filled >= 3 && Math.random() < 0.4) break;
       for (const [dx, dy] of directions) {
         q.push([x + dx, y + dy]);
       }
     }
-
-    return filled >= minSize;
+    return filled >= 3;
   }
 
   function generateRegions(queens) {
     const grid = Array.from({ length: size }, () => Array(size).fill(0));
     let id = 1;
     for (const [r, c] of queens) {
-      if (!growRegion(grid, r, c, id, 3)) return null;
+      if (!growRegion(grid, r, c, id)) return null;
       id++;
     }
     return grid;
   }
 
-  for (let attempt = 0; attempt < 100; attempt++) {
+  for (let i = 0; i < 100; i++) {
     const queens = placeQueens();
     if (!queens) continue;
     const regionMap = generateRegions(queens);
     if (!regionMap) continue;
-
-    const solutionGrid = Array.from({ length: size }, () => Array(size).fill("x"));
-    for (const [r, c] of queens) solutionGrid[r][c] = "queen";
-    return { region_map: regionMap, solution_grid: solutionGrid };
+    const solution = Array.from({ length: size }, () => Array(size).fill("x"));
+    for (const [r, c] of queens) solution[r][c] = "queen";
+    return { region_map: regionMap, solution_grid: solution };
   }
 
   return null;
