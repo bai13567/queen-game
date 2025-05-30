@@ -7,147 +7,68 @@
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
-      padding: 10px;
-      text-align: center;
-      background: #fafafd;
-      min-height: 100vh;
-      box-sizing: border-box;
+      margin: 0; padding: 10px; text-align: center; background: #fafafd;
+      min-height: 100vh; box-sizing: border-box;
     }
-    #controls {
-      margin-bottom: 10px;
-    }
+    #controls { margin-bottom: 10px; }
     #game-container {
-      position: relative;
-      display: inline-block;
-      width: 96vw;
-      max-width: 420px;
-      aspect-ratio: 1/1;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #0001;
-      margin: 0 auto 12px auto;
-      overflow: hidden;
+      position: relative; display: inline-block; width: 96vw; max-width: 420px;
+      aspect-ratio: 1/1; background: #fff; border-radius: 8px;
+      box-shadow: 0 0 10px #0001; margin: 0 auto 12px auto; overflow: hidden;
     }
     #board, #overlay-board {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      gap: 2px;
-      pointer-events: auto;
+      position: absolute; inset: 0; width: 100%; height: 100%; display: grid;
+      gap: 2px; pointer-events: auto;
     }
     .cell {
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #aaa;
-      user-select: none;
-      cursor: pointer;
+      box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+      border: 1px solid #aaa; user-select: none; cursor: pointer;
       transition: background 0.25s, opacity 0.4s;
-      background: #eee;
-      opacity: 0;
+      background: #eee; opacity: 0;
       animation: fadeInCell 0.3s ease forwards;
     }
-    @keyframes fadeInCell {
-      from { opacity: 0; transform: scale(0.8);}
-      to { opacity: 1; transform: scale(1);}
-    }
+    @keyframes fadeInCell { from{opacity:0; transform:scale(0.8);} to{opacity:1; transform:scale(1);} }
     .cell[data-state="queen"] { background: gold; }
     .cell[data-state="x"] { background: #ccc; }
-    .queen-icon {
-      font-size: 1.4em;
-      line-height: 1;
-      pointer-events: none;
-      filter: drop-shadow(0 0 1px #ffb) drop-shadow(0 0 3px #d4af37);
-    }
-    #overlay-board .cell {
-      background: none !important;
-      opacity: 0.45;
-      pointer-events: none;
-      z-index: 10;
-    }
-    #status {
-      font-size: 1.2em;
-      margin-top: 10px;
-      min-height: 1.5em;
-      height: 1.5em;
-    }
+    .queen-icon { font-size: 1.4em; line-height: 1; pointer-events: none; }
+    #overlay-board .cell { background: none !important; opacity: 0.45; pointer-events: none; z-index: 10; }
+    #status { font-size: 1.2em; margin-top: 10px; min-height: 1.5em; height: 1.5em; }
     button, select {
-      margin: 5px;
-      padding: 6px 12px;
-      font-size: 1em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      background: #f8f8fb;
-      transition: background 0.15s;
+      margin: 5px; padding: 6px 12px; font-size: 1em; border-radius: 5px;
+      border: 1px solid #ccc; background: #f8f8fb; transition: background 0.15s;
     }
     button:hover, select:focus { background: #ecebfa; }
     #rules {
-      max-width: 500px;
-      margin: 16px auto 0 auto;
-      background: #f9f8fe;
-      border-radius: 6px;
-      padding: 12px 10px;
-      color: #444;
-      text-align: left;
-      font-size: 0.98em;
-      box-shadow: 0 1px 4px #0001;
+      max-width: 500px; margin: 16px auto 0 auto; background: #f9f8fe;
+      border-radius: 6px; padding: 12px 10px; color: #444;
+      text-align: left; font-size: 0.98em; box-shadow: 0 1px 4px #0001;
     }
     #achievements {
-      max-width: 420px;
-      margin: 12px auto 0 auto;
-      font-size: 0.95em;
-      color: #475;
-      padding-bottom: 6px;
+      max-width: 420px; margin: 12px auto 0 auto; font-size: 0.95em;
+      color: #475; padding-bottom: 6px;
     }
-    /* 验证码弹窗样式 */
-    #verifyModal, #forgotModal {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0,0,0,0.20);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background: #fff;
-      border-radius: 10px;
-      padding: 32px 24px 24px 24px;
-      box-shadow: 0 4px 20px #0003;
-      min-width: 240px;
-      text-align: center;
-      position: relative;
-    }
-    .modal-content input {
-      font-size: 1.1em;
-      padding: 7px 10px;
-      border-radius: 5px;
-      border: 1px solid #bbb;
-      width: 80%;
-      margin-top: 12px;
-    }
-    .modal-content button {
-      margin: 10px 6px 0 6px;
-      padding: 6px 14px;
-    }
+    #autoBtn { margin-top: 0; }
     .firework {
-      position: absolute;
-      pointer-events: none;
-      z-index: 99;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      opacity: 0.85;
-      animation: fireworks 1s linear forwards;
+      position: absolute; pointer-events: none; z-index: 99; width: 8px; height: 8px;
+      border-radius: 50%; opacity: 0.85; animation: fireworks 1s linear forwards;
     }
     @keyframes fireworks {
-      0% { opacity: 0.9; }
-      80% { opacity: 0.95; }
+      0% { opacity: 0.9; } 80% { opacity: 0.95; }
       100% { opacity: 0; transform: scale(2.2);}
     }
+    #verifyModal, #forgotModal {
+      position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.20);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: #fff; border-radius: 10px; padding: 32px 24px 24px 24px;
+      box-shadow: 0 4px 20px #0003; min-width: 240px; text-align: center; position: relative;
+    }
+    .modal-content input {
+      font-size: 1.1em; padding: 7px 10px; border-radius: 5px; border: 1px solid #bbb;
+      width: 80%; margin-top: 12px;
+    }
+    .modal-content button { margin: 10px 6px 0 6px; padding: 6px 14px; }
   </style>
 </head>
 <body>
@@ -197,8 +118,8 @@
 </div>
 
 <div id="status"></div>
-
 <div id="achievements" style="display:none;"></div>
+<button id="autoBtn" style="display:none;">自动完成本局</button>
 
 <div id="rules">
   <strong>游戏规则：</strong><br>
@@ -211,83 +132,59 @@
 </div>
 
 <script>
-// ----- 成就系统 -----
-function getAchievements() {
-  try {
-    const v = localStorage.getItem('queenPuzzleAch');
-    return v ? JSON.parse(v) : { "6":0, "7":0, "8":0 };
-  } catch { return { "6":0, "7":0, "8":0 }; }
-}
-function setAchievements(obj) {
-  localStorage.setItem('queenPuzzleAch', JSON.stringify(obj));
-}
-function updateAchievements(size) {
-  const ach = getAchievements();
-  ach[size] = (ach[size]||0)+1;
-  setAchievements(ach);
-  showAchievements();
-}
-function showAchievements() {
-  const ach = getAchievements();
-  let txt = "成就：";
-  txt += `&nbsp;6x6：<b>${ach["6"]||0}</b> 次&nbsp;`;
-  txt += `7x7：<b>${ach["7"]||0}</b> 次&nbsp;`;
-  txt += `8x8：<b>${ach["8"]||0}</b> 次`;
-  document.getElementById("achievements").innerHTML = txt;
-  document.getElementById("achievements").style.display = "";
-}
-
-// ----- 棋盘与动画 -----
 const colors = ['#fdd','#dfd','#ddf','#ffd','#dff','#fdf','#eef','#fde','#cfc','#ccf'];
 let currentSize = 6;
 let cells = [], overlays = [], regionMap = [], solutionGrid = [];
-let showingSolution = false;
+let showingSolution = false, autoRunning = false;
 
-// 动态计算cell大小并设置样式
+// -------- 成就系统 --------
+function getAchievements() {
+  try { return JSON.parse(localStorage.getItem('queenPuzzleAch')) || {"6":0,"7":0,"8":0}; }
+  catch { return {"6":0,"7":0,"8":0}; }
+}
+function setAchievements(obj) { localStorage.setItem('queenPuzzleAch', JSON.stringify(obj)); }
+function updateAchievements(size) {
+  const ach = getAchievements();
+  ach[size] = (ach[size]||0)+1; setAchievements(ach); showAchievements();
+}
+function showAchievements() {
+  const ach = getAchievements();
+  document.getElementById("achievements").innerHTML =
+    `成就：&nbsp;6x6：<b>${ach["6"]||0}</b> 次&nbsp;7x7：<b>${ach["7"]||0}</b> 次&nbsp;8x8：<b>${ach["8"]||0}</b> 次`;
+  document.getElementById("achievements").style.display = "";
+  document.getElementById("autoBtn").style.display = "";
+}
+
+// -------- 棋盘与动画 --------
 function updateCellStyle() {
   const container = document.getElementById("game-container");
-  const containerSize = container.offsetWidth;
-  const cellSize = Math.floor((containerSize - (currentSize - 1) * 2) / currentSize);
+  const size = container.offsetWidth;
+  const cellSize = Math.floor((size - (currentSize - 1) * 2) / currentSize);
   let oldStyle = document.getElementById("dynamic-cell-style");
   if (oldStyle) oldStyle.remove();
   const style = document.createElement("style");
   style.id = "dynamic-cell-style";
-  style.innerHTML = `
-    .cell {
-      width: ${cellSize}px;
-      height: ${cellSize}px;
-      font-size: ${Math.floor(cellSize * 0.68)}px;
-    }
-    #overlay-board .cell {
-      font-size: ${Math.floor(cellSize * 0.68)}px;
-    }
-  `;
+  style.innerHTML = `.cell{width:${cellSize}px;height:${cellSize}px;font-size:${Math.floor(cellSize * 0.68)}px;}
+  #overlay-board .cell{font-size:${Math.floor(cellSize * 0.68)}px;}`;
   document.head.appendChild(style);
 }
 
 async function loadBoard() {
-  currentSize = parseInt(document.getElementById("sizeSelect").value);
-  showingSolution = false;
+  currentSize = +document.getElementById("sizeSelect").value;
+  showingSolution = autoRunning = false;
   document.getElementById("solutionBtn").textContent = "显示参考解";
+  document.getElementById("autoBtn").disabled = false;
   updateCellStyle();
 
-  const board = document.getElementById("board");
-  const overlayBoard = document.getElementById("overlay-board");
-  board.innerHTML = '';
-  overlayBoard.innerHTML = '';
-  board.style.gridTemplateColumns = overlayBoard.style.gridTemplateColumns =
-    `repeat(${currentSize}, 1fr)`;
-
+  const board = document.getElementById("board"), overlayBoard = document.getElementById("overlay-board");
+  board.innerHTML = overlayBoard.innerHTML = "";
+  board.style.gridTemplateColumns = overlayBoard.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
   cells = [], overlays = [];
-
-  let boardData = null;
-  let attempts = 0;
+  let boardData = null, attempts = 0;
   while (!boardData && attempts++ < 300) boardData = generateBoard(currentSize);
   if (!boardData) return alert("生成棋盘失败，请刷新页面重试");
-  regionMap = boardData.region_map;
-  solutionGrid = boardData.solution_grid;
+  regionMap = boardData.region_map; solutionGrid = boardData.solution_grid;
 
-  // 逐格淡入动画
   let delay = 0, delayStep = 18;
   for (let r = 0; r < currentSize; r++) {
     cells[r] = [], overlays[r] = [];
@@ -296,49 +193,38 @@ async function loadBoard() {
       cell.className = "cell";
       cell.dataset.state = "empty";
       cell.style.background = colors[(regionMap[r][c] - 1) % colors.length];
-      cell.style.opacity = 0;
-      cell.textContent = "";
-      cell.onclick = () => { if (!showingSolution) toggleCell(cell); };
+      cell.style.opacity = 0; cell.textContent = "";
+      cell.onclick = () => { if (!showingSolution && !autoRunning) toggleCell(cell); };
       setTimeout(()=>{ cell.style.opacity=1; }, delay);
       delay += delayStep;
+      board.appendChild(cell); cells[r][c] = cell;
 
-      board.appendChild(cell);
-      cells[r][c] = cell;
-
-      // 覆盖层（用SVG皇冠或emoji美化）
       const ov = document.createElement("div");
       ov.className = "cell";
-      if (solutionGrid[r][c] === "queen") {
-        ov.innerHTML = `<span class="queen-icon">👑</span>`;
-      } else {
-        ov.textContent = "❌";
-        ov.style.color = "#888";
-      }
-      overlayBoard.appendChild(ov);
-      overlays[r][c] = ov;
+      ov.innerHTML = (solutionGrid[r][c] === "queen")
+        ? `<span class="queen-icon">👑</span>` : `<span style="color:#888;">❌</span>`;
+      overlayBoard.appendChild(ov); overlays[r][c] = ov;
     }
   }
-
   document.getElementById("status").textContent = '';
-  document.getElementById("overlay-board").style.display = "none";
+  overlayBoard.style.display = "none";
 }
 
 function toggleCell(cell) {
+  if (autoRunning) return;
   const state = cell.dataset.state;
   if (state === "empty") {
-    cell.dataset.state = "x";
-    cell.textContent = "❌";
+    cell.dataset.state = "x"; cell.textContent = "❌";
   } else if (state === "x") {
-    cell.dataset.state = "queen";
-    cell.innerHTML = `<span class="queen-icon">👑</span>`;
+    cell.dataset.state = "queen"; cell.innerHTML = `<span class="queen-icon">👑</span>`;
   } else {
-    cell.dataset.state = "empty";
-    cell.textContent = "";
+    cell.dataset.state = "empty"; cell.textContent = "";
   }
   checkWin();
 }
 
 function showSolution() {
+  if (autoRunning) return;
   const overlay = document.getElementById("overlay-board");
   const button = document.getElementById("solutionBtn");
   if (!showingSolution) {
@@ -347,8 +233,7 @@ function showSolution() {
     showingSolution = true;
     for (let r = 0; r < currentSize; r++)
       for (let c = 0; c < currentSize; c++) {
-        cells[r][c].dataset.state = "empty";
-        cells[r][c].textContent = "";
+        cells[r][c].dataset.state = "empty"; cells[r][c].textContent = "";
       }
   } else {
     overlay.style.display = "none";
@@ -359,176 +244,83 @@ function showSolution() {
 }
 
 function showFireworks(x, y, container) {
-  const colors = ['#fc3','#f36','#3cf','#9c3','#fa5','#fd4','#6fc','#c9f','#f8c'];
+  const fcolors = ['#fc3','#f36','#3cf','#9c3','#fa5','#fd4','#6fc','#c9f','#f8c'];
   for (let i = 0; i < 14; i++) {
     const fw = document.createElement('div');
     fw.className = "firework";
-    fw.style.left = x+"px";
-    fw.style.top = y+"px";
-    fw.style.background = colors[Math.floor(Math.random()*colors.length)];
+    fw.style.left = x+"px"; fw.style.top = y+"px";
+    fw.style.background = fcolors[Math.floor(Math.random()*fcolors.length)];
     fw.style.transform = `translate(-50%,-50%) rotate(${i*25}deg)`;
     container.appendChild(fw);
     setTimeout(()=>fw.remove(), 900+Math.random()*500);
   }
 }
 
-function checkWin() {
-  let queens = [];
-  const rows = Array(currentSize).fill(0);
-  const cols = Array(currentSize).fill(0);
-  const regionQueens = {};
-  const regionSet = new Set();
-
-  for (let r = 0; r < currentSize; r++) {
-    for (let c = 0; c < currentSize; c++) {
-      const cell = cells[r][c];
-      const state = cell.dataset.state;
-      const regionId = regionMap[r][c];
-      regionSet.add(regionId);
-
-      if (state === "queen") {
-        queens.push([r, c]);
-        rows[r]++;
-        cols[c]++;
-        regionQueens[regionId] = (regionQueens[regionId] || 0) + 1;
-      }
+function checkWin(auto = false) {
+  let queens = [], rows = Array(currentSize).fill(0), cols = Array(currentSize).fill(0),
+      regionQueens = {}, regionSet = new Set();
+  for (let r = 0; r < currentSize; r++) for (let c = 0; c < currentSize; c++) {
+    const cell = cells[r][c], state = cell.dataset.state, regionId = regionMap[r][c];
+    regionSet.add(regionId);
+    if (state === "queen") {
+      queens.push([r, c]); rows[r]++; cols[c]++;
+      regionQueens[regionId] = (regionQueens[regionId] || 0) + 1;
     }
   }
-
-  const regionCount = regionSet.size;
-  const queenCount = queens.length;
+  const regionCount = regionSet.size, queenCount = queens.length;
   let conflict = false;
-
   if (rows.some(v => v > 1) || cols.some(v => v > 1)) conflict = true;
   if (Object.values(regionQueens).some(v => v > 1)) conflict = true;
-  for (let i = 0; i < queens.length; i++) {
-    for (let j = i + 1; j < queens.length; j++) {
-      const [r1, c1] = queens[i], [r2, c2] = queens[j];
-      const dr = Math.abs(r1 - r2), dc = Math.abs(c1 - c2);
-      if (dr === 1 && dc === 1) conflict = true;
-    }
+  for (let i = 0; i < queens.length; i++) for (let j = i + 1; j < queens.length; j++) {
+    const [r1, c1] = queens[i], [r2, c2] = queens[j],
+          dr = Math.abs(r1 - r2), dc = Math.abs(c1 - c2);
+    if (dr === 1 && dc === 1) conflict = true;
   }
   if (queenCount > regionCount) conflict = true;
-
-  const incomplete = queenCount < regionCount;
-  const status = document.getElementById("status");
+  const incomplete = queenCount < regionCount, status = document.getElementById("status");
   if (conflict) {
-    status.textContent = "❌ 有冲突";
-    status.style.color = "red";
+    status.textContent = "❌ 有冲突"; status.style.color = "red";
   } else if (incomplete) {
-    status.textContent = "🔄 未完成";
-    status.style.color = "orange";
+    status.textContent = "🔄 未完成"; status.style.color = "orange";
   } else {
-    status.textContent = "🎉 恭喜完成！";
-    status.style.color = "green";
-    const rect = document.getElementById("game-container").getBoundingClientRect();
-    showFireworks(rect.width/2, rect.height/2, document.getElementById("game-container"));
-    updateAchievements(currentSize);
+    status.textContent = "🎉 恭喜完成！"; status.style.color = "green";
+    if (!auto) {
+      const rect = document.getElementById("game-container").getBoundingClientRect();
+      showFireworks(rect.width/2, rect.height/2, document.getElementById("game-container"));
+      updateAchievements(currentSize);
+    }
+    document.getElementById("autoBtn").disabled = true;
   }
 }
 
-function generateBoard(size) {
-  const queenCount = size;
-  const maxRegionSize = Math.floor((size * size) / queenCount);
-  const minRegionSize = 3;
-
-  function shuffleArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+// ---- 自动完成动画 ----
+async function autoComplete() {
+  if (autoRunning || showingSolution) return;
+  autoRunning = true;
+  document.getElementById("autoBtn").disabled = true;
+  // 清空棋盘
+  for (let r = 0; r < currentSize; r++)
+    for (let c = 0; c < currentSize; c++) {
+      cells[r][c].dataset.state = "empty";
+      cells[r][c].textContent = "";
     }
-  }
-
-  function generateRegions() {
-    const grid = Array.from({ length: size }, () => Array(size).fill(0));
-    const directions = [[1,0], [-1,0], [0,1], [0,-1]];
-    let regionId = 1;
-
-    while (regionId <= queenCount) {
-      const r = Math.floor(Math.random() * size);
-      const c = Math.floor(Math.random() * size);
-      if (grid[r][c] !== 0) continue;
-
-      const q = [[r, c]];
-      const visited = Array.from({ length: size }, () => Array(size).fill(false));
-      const region = [];
-      visited[r][c] = true;
-      region.push([r, c]);
-
-      while (q.length && region.length < maxRegionSize) {
-        const [x, y] = q.shift();
-        for (const [dx, dy] of directions) {
-          const nx = x + dx, ny = y + dy;
-          if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
-          if (visited[nx][ny] || grid[nx][ny] !== 0) continue;
-          visited[nx][ny] = true;
-          region.push([nx, ny]);
-          q.push([nx, ny]);
-          if (region.length >= minRegionSize && Math.random() < 0.3) break;
-        }
-      }
-
-      if (region.length >= minRegionSize) {
-        for (const [x, y] of region) grid[x][y] = regionId;
-        regionId++;
-      } else return null;
-    }
-
-    const flat = grid.flat();
-    if (flat.includes(0)) return null;
-    return grid;
-  }
-
-  function placeQueens(regionMap) {
-    const regionCells = {};
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        const id = regionMap[r][c];
-        if (!regionCells[id]) regionCells[id] = [];
-        regionCells[id].push([r, c]);
+  // 动画逐步填充解
+  for (let r = 0; r < currentSize; r++)
+    for (let c = 0; c < currentSize; c++) {
+      await new Promise(res=>setTimeout(res, 60));
+      if (solutionGrid[r][c] === "queen") {
+        cells[r][c].dataset.state = "queen";
+        cells[r][c].innerHTML = `<span class="queen-icon">👑</span>`;
+      } else {
+        cells[r][c].dataset.state = "x";
+        cells[r][c].textContent = "❌";
       }
     }
-
-    const regionIds = Object.keys(regionCells).map(Number);
-    const queens = [];
-
-    function isValid(r, c) {
-      return queens.every(([qr, qc]) =>
-        qr !== r && qc !== c &&
-        Math.abs(qr - r) !== Math.abs(qc - c) &&
-        !(Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1)
-      );
-    }
-
-    function backtrack(idx) {
-      if (idx === regionIds.length) return true;
-      const regionId = regionIds[idx];
-      const cells = [...regionCells[regionId]];
-      shuffleArray(cells);
-
-      for (const [r, c] of cells) {
-        if (isValid(r, c)) {
-          queens.push([r, c]);
-          if (backtrack(idx + 1)) return true;
-          queens.pop();
-        }
-      }
-      return false;
-    }
-
-    return backtrack(0) ? queens : null;
-  }
-
-  for (let i = 0; i < 300; i++) {
-    const regionMap = generateRegions();
-    if (!regionMap) continue;
-    const queens = placeQueens(regionMap);
-    if (!queens) continue;
-    const solutionGrid = Array.from({ length: size }, () => Array(size).fill("x"));
-    for (const [r, c] of queens) solutionGrid[r][c] = "queen";
-    return { region_map: regionMap, solution_grid: solutionGrid };
-  }
-  return null;
+  await new Promise(res=>setTimeout(res, 200));
+  checkWin(true);
+  // 自动完成也计入成就
+  updateAchievements(currentSize);
+  autoRunning = false;
 }
 
 // ---- 验证码弹窗 ----
@@ -537,57 +329,105 @@ function showVerifyModal() {
   document.getElementById('verifyMsg').textContent = "";
   document.getElementById('verifyInput').value = "";
 }
-function closeVerifyModal() {
-  document.getElementById('verifyModal').style.display = "none";
-}
+function closeVerifyModal() { document.getElementById('verifyModal').style.display = "none"; }
 function showForgotModal() {
   document.getElementById('forgotModal').style.display = "";
   document.getElementById('forgotMsg').textContent = "";
   document.getElementById('forgotInput').value = "";
 }
-function closeForgotModal() {
-  document.getElementById('forgotModal').style.display = "none";
-}
+function closeForgotModal() { document.getElementById('forgotModal').style.display = "none"; }
 function checkVerifyCode() {
   const val = document.getElementById('verifyInput').value.trim();
   if (val === "baizhou666") {
-    localStorage.setItem('queenPuzzle_verified', '1');
-    closeVerifyModal();
-    showMainUI();
-  } else {
-    document.getElementById('verifyMsg').textContent = "验证码错误";
-  }
+    localStorage.setItem('queenPuzzle_verified', '1'); closeVerifyModal(); showMainUI();
+  } else document.getElementById('verifyMsg').textContent = "验证码错误";
 }
 function checkForgotPwd() {
   const val = document.getElementById('forgotInput').value.trim();
   if (val === "12731273z") {
     localStorage.setItem('queenPuzzle_verified', '1');
-    closeForgotModal();
-    closeVerifyModal();
-    showMainUI();
-  } else {
-    document.getElementById('forgotMsg').textContent = "密码错误";
-  }
+    closeForgotModal(); closeVerifyModal(); showMainUI();
+  } else document.getElementById('forgotMsg').textContent = "密码错误";
 }
-
 // ---- 首次访问处理 ----
 function showMainUI() {
   document.getElementById("controls").style.display = "";
   document.getElementById("game-container").style.display = "";
   document.getElementById("achievements").style.display = "";
-  showAchievements();
-  loadBoard();
+  document.getElementById("autoBtn").style.display = "";
+  showAchievements(); loadBoard();
 }
 window.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem('queenPuzzle_verified') === '1') {
-    showMainUI();
-  } else {
-    showVerifyModal();
+  document.getElementById("autoBtn").onclick = autoComplete;
+  if (localStorage.getItem('queenPuzzle_verified') === '1') showMainUI();
+  else showVerifyModal();
+});
+window.addEventListener("resize", updateCellStyle);
+
+// ---- 生成棋盘与解 ----
+function generateBoard(size) {
+  const queenCount = size, maxRegionSize = Math.floor((size * size) / queenCount), minRegionSize = 3;
+  function shuffleArray(arr) { for (let i = arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random() * (i+1)); [arr[i], arr[j]] = [arr[j], arr[i]];
+  }}
+  function generateRegions() {
+    const grid = Array.from({ length: size }, () => Array(size).fill(0));
+    const directions = [[1,0], [-1,0], [0,1], [0,-1]];
+    let regionId = 1;
+    while (regionId <= queenCount) {
+      const r = Math.floor(Math.random() * size), c = Math.floor(Math.random() * size);
+      if (grid[r][c] !== 0) continue;
+      const q = [[r, c]], visited = Array.from({ length: size }, () => Array(size).fill(false)), region = [];
+      visited[r][c] = true; region.push([r, c]);
+      while (q.length && region.length < maxRegionSize) {
+        const [x, y] = q.shift();
+        for (const [dx, dy] of directions) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
+          if (visited[nx][ny] || grid[nx][ny] !== 0) continue;
+          visited[nx][ny] = true; region.push([nx, ny]); q.push([nx, ny]);
+          if (region.length >= minRegionSize && Math.random() < 0.3) break;
+        }
+      }
+      if (region.length >= minRegionSize) { for (const [x, y] of region) grid[x][y] = regionId; regionId++; }
+      else return null;
+    }
+    if (grid.flat().includes(0)) return null;
+    return grid;
   }
-});
-window.addEventListener("resize", () => {
-  updateCellStyle();
-});
+  function placeQueens(regionMap) {
+    const regionCells = {};
+    for (let r = 0; r < size; r++)
+      for (let c = 0; c < size; c++) {
+        const id = regionMap[r][c];
+        if (!regionCells[id]) regionCells[id] = [];
+        regionCells[id].push([r, c]);
+      }
+    const regionIds = Object.keys(regionCells).map(Number), queens = [];
+    function isValid(r, c) {
+      return queens.every(([qr, qc]) =>
+        qr !== r && qc !== c && Math.abs(qr - r) !== Math.abs(qc - c) &&
+        !(Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1));
+    }
+    function backtrack(idx) {
+      if (idx === regionIds.length) return true;
+      const regionId = regionIds[idx], cells = [...regionCells[regionId]]; shuffleArray(cells);
+      for (const [r, c] of cells) {
+        if (isValid(r, c)) { queens.push([r, c]); if (backtrack(idx + 1)) return true; queens.pop(); }
+      }
+      return false;
+    }
+    return backtrack(0) ? queens : null;
+  }
+  for (let i = 0; i < 300; i++) {
+    const regionMap = generateRegions(); if (!regionMap) continue;
+    const queens = placeQueens(regionMap); if (!queens) continue;
+    const solutionGrid = Array.from({ length: size }, () => Array(size).fill("x"));
+    for (const [r, c] of queens) solutionGrid[r][c] = "queen";
+    return { region_map: regionMap, solution_grid: solutionGrid };
+  }
+  return null;
+}
 </script>
 </body>
 </html>
